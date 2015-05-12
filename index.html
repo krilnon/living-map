@@ -3,14 +3,91 @@
 	<head>
 		<meta charset="utf-8">
 
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		<script src="http://d3js.org/queue.v1.min.js"></script>
 		<script src="http://d3js.org/topojson.v1.min.js"></script>
-		<script src="http://static.cloudstitch.io/cloudstitch.js" app="krilnon/family-where"></script>
-		<link type="cloudstitch/gsheet" href="http://cloudstitch.io/krilnon/family-where/datasource/sheet" />
+		<!--<script src="http://static.cloudstitch.io/cloudstitch.js" app="krilnon/family-where"></script>-->
+
+		<style>
+		circle {
+			fill: red;
+			fill-opacity: 0.5;
+		}
+
+		.blue {
+			stroke:rgb(66,146,198);
+			stroke-opacity: 0.3;
+		}
+
+		.counties {
+			fill: none;
+		}
+		</style>
+
+		<script>
+		$(init)
+
+		var
+			trips = [
+				{ Who: 'Kyle', Where: 'Portland, OR', Duration: '150', Date: '01/01/2015' }
+			],
+			svg,
+			projection,
+			width = 960,
+			height = 800
+
+		function init(){
+			projection = d3.geo.albersUsa()
+				.scale(1280)
+				.translate([width / 2, height / 2])
+
+			var path = d3.geo.path()
+				.projection(projection)
+
+			queue()
+				// http://bl.ocks.org/mbostock/raw/4090846/us.json
+				// probably public domain because it's from the US gov
+				.defer(d3.json, "us.json")
+				.await(function(error, us){
+					svg = d3.select('body').append('svg')
+						.attr('width', width)
+						.attr('height', height)
+
+					svg.append("g")
+						.attr("class", "counties")
+					.selectAll("path")
+						.data(topojson.feature(us, us.objects.states).features)
+					.enter().append("path")
+						.attr("class", 'blue')
+						.attr("d", path)
+
+					var tripIcons = svg.append('g').attr('id', 'tripIcons')
+
+					svg.selectAll('circle')
+						.data(trips)
+					.enter().append('circle')
+						.attr('cx', function(d){ return projection(geocode(d.Where))[0] })
+						.attr('cy', function(d){ return projection(geocode(d.Where))[1] })
+						.attr('r',  function(d){ return 10 || d.Duration })
+				})		
+		}
+
+		function geocode(where){
+			return fakeGeocode()
+		}
+
+		function fakeGeocode(){
+			return [-122.681944, 45.52]
+		}
+		</script>
+		
+		<!-- <link type="cloudstitch/gsheet" href="http://cloudstitch.io/krilnon/family-where/datasource/sheet" /> -->
 	</head>
 	<body>
-		<h1>testing</h1>
+		<h1>Trips</h1>
 		<div widget="krilnon/family-where"></div>
+
+
 	</body>
 </html>
